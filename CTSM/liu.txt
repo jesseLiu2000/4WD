@@ -1,0 +1,107 @@
+
+# 1.在合适的位置实现classify函数
+# 2.理解算法的实现过程，并把尝试使用非线性分类器处理线性数据（即调整svm的最后一个参数），调整gamma观察结果
+# 3.将代码在本地实现，并观察输出图像
+# 4.使用data中的train_kernel.txt以及test_kernel.txt作为待处理数据，并调整gamma参数的大小，观察对分类效果的影响。
+# 5.鼓励把模型推广到多分类问题，并尝试train_multi.txt和test_multi.txt数据
+
+
+#-*- coding: utf-8 -*-
+import numpy as np
+from scipy import io as spio
+from matplotlib import pyplot as plt
+from sklearn import svm
+from sklearn import metrics
+import pandas as pd
+
+def load_data(fname):
+    """
+    载入数据。
+    """
+    with open(fname, 'r') as f:
+        data = []
+        line = f.readline()
+        for line in f:
+            line = line.strip().split()
+            x1 = float(line[0])
+            x2 = float(line[1])
+            t = int(line[2])
+            data.append([x1, x2, t])
+        return np.array(data)
+
+
+# 作图
+def plot_data(X, y):
+    plt.figure(figsize=(10, 8))
+    pos = np.where(y == 1)  # 找到y=1的位置
+    neg = np.where(y == -1)  # 找到y=0的位置
+    p1, = plt.plot(np.ravel(X[pos, 0]), np.ravel(X[pos, 1]), 'ro', markersize=8)
+    p2, = plt.plot(np.ravel(X[neg, 0]), np.ravel(X[neg, 1]), 'g^', markersize=8)
+    plt.xlabel("X1")
+    plt.ylabel("X2")
+    plt.legend([p1, p2], ["y==1", "y==-1"])
+    return plt
+
+
+# 画决策边界
+def plot_decisionBoundary(X, y, model, class_='linear'):
+    plt = plot_data(X, y)
+
+    # 线性边界
+    if class_ == 'linear':
+        w = model.coef_
+        b = model.intercept_
+        xp = np.linspace(np.min(X[:, 0]), np.max(X[:, 0]), 100)
+        yp = -(w[0, 0] * xp + b) / w[0, 1]
+        plt.plot(xp, yp, 'b-', linewidth=2.0)
+        plt.show()
+    else:  # 非线性边界
+        x_1 = np.transpose(np.linspace(np.min(X[:, 0]), np.max(X[:, 0]), 500).reshape(1, -1))
+        x_2 = np.transpose(np.linspace(np.min(X[:, 1]), np.max(X[:, 1]), 500).reshape(1, -1))
+        X1, X2 = np.meshgrid(x_1, x_2)
+        vals = np.zeros(X1.shape)
+        for i in range(X1.shape[1]):
+            this_X = np.hstack((X1[:, i].reshape(-1, 1), X2[:, i].reshape(-1, 1)))
+            vals[:, i] = model.predict(this_X)
+
+        plt.contour(X1, X2, vals, [0, 1], cmap='Blues_r') #'Blues', 'Blues_r'
+        plt.show()
+
+
+def SVM(X, y, kernel_class):
+    '''data1——线性分类'''
+    # plt = plot_data(X, y)
+    if kernel_class == 'linear':
+        model = svm.SVC(C=1.0, kernel='linear').fit(X, y)  # 指定核函数为线性核函数
+        plot_decisionBoundary(X, y, model)  # 画决策边界
+        accuracy1 = model.score(x_test,t_test)
+        x_pre = model.predict(x_test)
+        print(x_pre)
+        print(t_test)
+        #accuracy = model.score(x_pre,t_test)
+        print(accuracy1) 
+        print(accuracy)
+    else:
+        '''data2——非线性分类'''
+        # plt = plot_data(X, y)
+        # plt.show()
+        model = svm.SVC(gamma=500).fit(X, y)  # gamma为核函数的系数，值越大拟合的越好
+        plot_decisionBoundary(X, y, model, class_='notLinear')  # 画决策边界
+
+
+if __name__ == "__main__":
+    train_file = 'train_linear.txt'
+    test_file = 'test_linear.txt'
+    data_train = load_data(train_file)  # 数据格式[x1, x2, t] ::(200,3)维数据，每行是一个样吧，前两列表示特征，最后一列表示标签
+    data_test = load_data(test_file)
+
+    # 使用SVM模型预测标签
+    x_train = data_train[:, :2]  # feature [x1, x2]
+    t_train = data_train[:, 2]  # 真实标签
+    x_test = data_test[:, :2]
+    t_test = data_test[:, 2]
+
+    SVM(x_train,t_train,'linear')
+    #SVM(x_test, t_test, 'linear')
+    #classify(x_train,x_test)
+

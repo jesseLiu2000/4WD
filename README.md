@@ -1,2 +1,2 @@
 # 4WD
-简单实现小车的一些基本功能，在慢速条件下可以实现避障， 转弯之类的功能，没有调用传感器模块，只是拍照后进行识别。
+Simple implementation of some basic functions of the car, such as obstacle avoidance and turning under slow speed conditions, without calling the sensor module, just to identify after taking pictures.
